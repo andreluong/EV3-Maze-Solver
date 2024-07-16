@@ -236,6 +236,7 @@ void Solver()
 				}	
 				hasMoved = 0;
 			} else {
+				// If there is no wall on the right side and the robot has moved
 				if (Grid[CurrentPosRow][CurrentPosCol].EastWall == 0 && hasMoved == 1) {
 					RobotDirection = 1; // East
 					hasMoved = 0;
@@ -259,6 +260,7 @@ void Solver()
 				}	
 				hasMoved = 0;
 			} else {
+				// If there is no wall on the right side and the robot has moved
 				if (Grid[CurrentPosRow][CurrentPosCol].SouthWall == 0 && hasMoved == 1) {
 					RobotDirection = 2; // South
 					hasMoved = 0;
@@ -282,6 +284,7 @@ void Solver()
 				}	
 				hasMoved = 0;
 			} else {
+				// If there is no wall on the right side and the robot has moved
 				if (Grid[CurrentPosRow][CurrentPosCol].WestWall == 0 && hasMoved == 1) {
 					RobotDirection = 3; // West
 					hasMoved = 0;
@@ -305,6 +308,7 @@ void Solver()
 				}	
 				hasMoved = 0;
 			} else {
+				// If there is no wall on the right side and the robot has moved
 				if (Grid[CurrentPosRow][CurrentPosCol].NorthWall == 0 && hasMoved == 1) {
 					RobotDirection = 0; // North
 					hasMoved = 0;
@@ -340,8 +344,8 @@ void DisplayStartandEnd()
     {
         YpixelPos = (2 * StartPosRow + 1) * ScreenHeight / 8;
     }
-
     displayStringAt(XpixelPos, YpixelPos, "S");
+    
     if (TargetPosCol == 0)
     {
         XpixelPos = ScreenWidth / 12;
@@ -357,6 +361,5 @@ void DisplayStartandEnd()
     {
         YpixelPos = (2 * TargetPosRow + 1) * ScreenHeight / 8;
     }
-
     displayStringAt(XpixelPos, YpixelPos, "E");
 }
