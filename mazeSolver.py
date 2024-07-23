@@ -8,7 +8,9 @@ from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 
 import mazeHelper
-import time
+import time # sleep function
+
+ev3 = EV3Brick()
 
 SCREEN_HEIGHT = 127
 SCREEN_WIDTH = 177
@@ -34,8 +36,8 @@ robotDirection = 0 # 0=North, 1=East, 2=South, 3=West
 currentPosRow = START_POS_ROW
 currentPosCol = START_POS_COL
 
-hasTurned = 0 # 1 = has turned right
-hasMoved = 0 # 1 = has moved
+hasTurned = False
+hasMoved = False
 
 # Optimal path stack using list
 optimalPathStack = []
@@ -52,17 +54,17 @@ optimalPathStack = []
 # 	- Else, move based on the direction
 def move(wall, rightWall):
     if wall == 1:
-        if hasTurned == 1:
+        if hasTurned == True:
             robotDirection = (robotDirection + 2) % 4
-            hasTurned = 0
+            hasTurned = False
         else:
             robotDirection = (robotDirection + 1) % 4
-            hasTurned = 1
-        hasMoved = 0
+            hasTurned = True
+        hasMoved = False
     else:
-        if rightWall == 0 and hasMoved == 1:
+        if rightWall == 0 and hasMoved == True:
             robotDirection = (robotDirection + 1) % 4
-            hasMoved = 0
+            hasMoved = False
         else:
             if robotDirection == 0:
                 currentPosRow -= 1
@@ -79,20 +81,21 @@ def move(wall, rightWall):
             else:
                 optimalPathStack.append(robotDirection)
             
-            hasMoved = 1
-        hasTurned = 0
+            hasMoved = True
+        hasTurned = False
 
 def pathFinder():
 	# 0=North, 1=East, 2=South, 3=West
+    gridCell = grid[currentPosRow][currentPosCol]
     match robotDirection:
         case 0:
-            move(grid[currentPosRow][currentPosCol].northWall, grid[currentPosRow][currentPosCol].eastWall)
+            move(gridCell.northWall, gridCell.eastWall)
         case 1:
-            move(grid[currentPosRow][currentPosCol].eastWall, grid[currentPosRow][currentPosCol].southWall)
+            move(gridCell.eastWall, gridCell.southWall)
         case 2:
-            move(grid[currentPosRow][currentPosCol].southWall, grid[currentPosRow][currentPosCol].westWall)
+            move(gridCell.southWall, gridCell.westWall)
         case 3:
-            move(grid[currentPosRow][currentPosCol].westWall, grid[currentPosRow][currentPosCol].northWall)
+            move(gridCell.westWall, gridCell.northWall)
 
 # Draws the robot and maze on the screen
 def drawOnScreen():
@@ -100,7 +103,7 @@ def drawOnScreen():
     mazeHelper.displayStartAndEnd(START_POS_ROW, START_POS_COL, TARGET_POS_ROW, TARGET_POS_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
     mazeHelper.drawBot(robotDirection, currentPosRow, currentPosCol, SCREEN_WIDTH, SCREEN_HEIGHT)
     time.sleep(1000)
-    EV3Brick.screen.clear()
+    ev3.screen.clear()
 
 # Reverses the directions in the optimal path stack
 def reverseStack():
@@ -136,6 +139,7 @@ while True:
 
     break
 
+# Print the optimal path stack
 for x in optimalPathStack:
     match x:
         case 0:
@@ -151,8 +155,9 @@ for x in optimalPathStack:
 reverseStack()
 moveUsingStack()
 
+# Ending message
 while True:
-    EV3Brick.screen.print("Maze Solved !!")
+    ev3.screen.print("Maze Solved !!")
     time.sleep(500)
-    EV3Brick.screen.clear()
+    ev3.screen.clear()
     time.sleep(500)
