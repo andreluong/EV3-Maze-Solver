@@ -15,6 +15,11 @@ SCREEN_WIDTH = 177
 MAX_ROWS = 4
 MAX_COLS = 6
 
+START_POS_ROW = 0
+START_POS_COL = 0
+TARGET_POS_ROW = 3
+TARGET_POS_COL = 0
+
 class Cell:
     def __init__(self, northWall, eastWall, southWall, westWall):
         self.northWall = northWall
@@ -26,12 +31,8 @@ grid = [[Cell(0, 0, 0, 0) for _ in range(MAX_ROWS)] for _ in range(MAX_COLS)]
 
 robotDirection = 0 # 0=North, 1=East, 2=South, 3=West
 
-startPosRow = 0
-startPosCol = 0
-currentPosRow = startPosRow
-currentPosCol = startPosCol
-targetPosRow = 3
-targetPosCol = 0
+currentPosRow = START_POS_ROW
+currentPosCol = START_POS_COL
 
 hasTurned = 0 # 1 = has turned right
 hasMoved = 0 # 1 = has moved
@@ -43,7 +44,6 @@ optimalPathStack = []
 
 
 
-# Using the direction of the robot,
 # If the robot faces a wall
 # 	- If the robot has turned, perform a geomagnetic reversal 
 # 	- Else, turn right
@@ -73,7 +73,7 @@ def move(wall, rightWall):
             elif robotDirection == 3:
                 currentPosCol -= 1
 
-            # If last move was the opposite direction of the current direction, remove it
+            # If last move is the opposite direction of the current direction, remove it
             if (optimalPathStack[-1] == (robotDirection + 2) % 4):
                 optimalPathStack.pop()
             else:
@@ -82,7 +82,7 @@ def move(wall, rightWall):
             hasMoved = 1
         hasTurned = 0
 
-def solver():
+def pathFinder():
 	# 0=North, 1=East, 2=South, 3=West
     match robotDirection:
         case 0:
@@ -94,26 +94,62 @@ def solver():
         case 3:
             move(grid[currentPosRow][currentPosCol].westWall, grid[currentPosRow][currentPosCol].northWall)
 
+# Draws the robot and maze on the screen
+def drawOnScreen():
+    mazeHelper.gridDraw(grid, SCREEN_WIDTH, SCREEN_HEIGHT)
+    mazeHelper.displayStartAndEnd(START_POS_ROW, START_POS_COL, TARGET_POS_ROW, TARGET_POS_COL, SCREEN_WIDTH, SCREEN_HEIGHT)
+    mazeHelper.drawBot(robotDirection, currentPosRow, currentPosCol, SCREEN_WIDTH, SCREEN_HEIGHT)
+    time.sleep(1000)
+    EV3Brick.screen.clear()
+
+# Reverses the directions in the optimal path stack
+def reverseStack():
+    for i in range(len(optimalPathStack)):
+        optimalPathStack[i] = (optimalPathStack[i] + 2) % 4
+
+# Fix directions
+def moveUsingStack():
+    for path in optimalPathStack:
+        match path:
+            case 0:
+                currentPosRow -= 1
+            case 1:
+                currentPosCol += 1
+            case 2:
+                currentPosRow += 1
+            case 3:
+                currentPosCol -= 1
+        drawOnScreen()
+    
+    optimalPathStack.clear()
+
+
 
 # Main loop
 while True:
     mazeHelper.gridInit(grid)
     mazeHelper.wallGen(grid)
 
-    while (currentPosRow != targetPosRow) or (currentPosCol != targetPosCol):
-        solver()
-        mazeHelper.gridDraw(grid, SCREEN_WIDTH, SCREEN_HEIGHT)
-        mazeHelper.displayStartAndEnd(startPosRow, startPosCol, targetPosRow, targetPosCol, SCREEN_WIDTH, SCREEN_HEIGHT)
-        mazeHelper.drawBot(robotDirection, currentPosRow, currentPosCol, SCREEN_WIDTH, SCREEN_HEIGHT)
-        time.sleep(1000)
-        EV3Brick.screen.clear()
+    while (currentPosRow != TARGET_POS_ROW) or (currentPosCol != TARGET_POS_COL):
+        pathFinder()
+        drawOnScreen()
 
-
-    # Reverse back to start
     break
 
 for x in optimalPathStack:
-    print(x)
+    match x:
+        case 0:
+            print("North")
+        case 1:
+            print("East")
+        case 2:
+            print("South")
+        case 3:
+            print("West")
+
+# Reverse back to start
+reverseStack()
+moveUsingStack()
 
 while True:
     EV3Brick.screen.print("Maze Solved !!")
