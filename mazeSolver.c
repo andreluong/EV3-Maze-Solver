@@ -40,6 +40,8 @@ void reverseStack();
 void addToPath();
 void moveUsingStack();
 void smoothDirections();
+void mover();
+void pathFinder();
 
 void testingDatalog()
 {
@@ -336,149 +338,219 @@ void addToPath()
     }
 }
 
+// Move the robot's position based on direction
+void mover()
+{
+    switch (RobotDirection)
+    {
+    case 0:
+        CurrentPosRow++;
+        break;
+    case 1:
+        CurrentPosCol++;
+        break;
+    case 2:
+        CurrentPosRow--;
+        break;
+    case 3:
+        CurrentPosCol--;
+        break;
+    }
+}
+
+// Finds the path given the walls
 //  If the robot faces a wall
-//      - If the robot has turned, perform a geomagnetic reversal 
+//      - If the robot has turned before, rotate 180 degrees
 //  	- Else, rotate right
 //  Else if there is no wall,
 //  	- If the right side of the robot has no wall and the robot has moved, rotate right
 //  	- Else, move based on the direction and add to the optimal path stack
+void pathFinder(int wall, int rightWall)
+{
+    if (wall == 1)
+    {
+        if (hasTurned == 1)
+        {
+            RobotDirection = (RobotDirection + 2) % 4;
+            hasTurned = 0;
+        }
+        else
+        {
+            RobotDirection = (RobotDirection + 1) % 4;
+            hasTurned = 1;
+        }
+        hasMoved = 0;
+    }
+    else
+    {
+        if (rightWall == 0 && hasMoved == 1)
+        {
+            RobotDirection = (RobotDirection + 1) % 4;
+            hasMoved = 0;
+        }
+        else
+        {
+            mover();
+            addToPath();
+            hasMoved = 1;
+        }
+        hasTurned = 0;
+    }
+}
+
 void Solver()
 {
     switch (RobotDirection)
     {
-        case 0:
-        {
-            if (Grid[CurrentPosRow][CurrentPosCol].NorthWall == 1)
-            {
-                if (hasTurned == 1)
-                {
-                    RobotDirection = 1;
-                    hasTurned = 0;
-                }
-                else
-                {
-                    RobotDirection = 1;
-                    hasTurned = 1;
-                }
-                hasMoved = 0;
-            }
-            else
-            {
-                if (Grid[CurrentPosRow][CurrentPosCol].EastWall == 0 && hasMoved == 1)
-                {
-                    RobotDirection = 1;
-                    hasMoved = 0;
-                }
-                else
-                {
-                    CurrentPosRow++;
-                    addToPath();
-                    hasMoved = 1;
-                }
-                hasTurned = 0;
-            }
-            break;
-        }
-        case 1:
-        {
-            if (Grid[CurrentPosRow][CurrentPosCol].EastWall == 1)
-            {
-                if (hasTurned == 1)
-                {
-                    RobotDirection = 3;
-                    hasTurned = 0;
-                }
-                else
-                {
-                    RobotDirection = 2;
-                    hasTurned = 1;
-                }
-                hasMoved = 0;
-            }
-            else
-            {
-                if (Grid[CurrentPosRow][CurrentPosCol].SouthWall == 0 && hasMoved == 1)
-                {
-                    RobotDirection = 2;
-                    hasMoved = 0;
-                }
-                else
-                {
-                    CurrentPosCol++;
-                    addToPath();
-                    hasMoved = 1;
-                }
-                hasTurned = 0;
-            }
-            break;
-        }
-        case 2:
-        {
-            if (Grid[CurrentPosRow][CurrentPosCol].SouthWall == 1)
-            {
-                if (hasTurned == 1)
-                {
-                    RobotDirection = 0;
-                    hasTurned = 0;
-                }
-                else
-                {
-                    RobotDirection = 3;
-                    hasTurned = 1;
-                }
-                hasMoved = 0;
-            }
-            else
-            {
-                if (Grid[CurrentPosRow][CurrentPosCol].WestWall == 0 && hasMoved == 1)
-                {
-                    RobotDirection = 3;
-                    hasMoved = 0;
-                }
-                else
-                {
-                    CurrentPosRow--;
-                    addToPath();
-                    hasMoved = 1;
-                }
-                hasTurned = 0;
-            }
-            break;
-        }
-        case 3:
-        {
-            if (Grid[CurrentPosRow][CurrentPosCol].WestWall == 1)
-            {
-                if (hasTurned == 1)
-                {
-                    RobotDirection = 1;
-                    hasTurned = 0;
-                }
-                else
-                {
-                    RobotDirection = 0;
-                    hasTurned = 1;
-                }
-                hasMoved = 0;
-            }
-            else
-            {
-                if (Grid[CurrentPosRow][CurrentPosCol].NorthWall == 0 && hasMoved == 1)
-                {
-                    RobotDirection = 0;
-                    hasMoved = 0;
-                }
-                else
-                {
-                    CurrentPosCol--;
-                    addToPath();
-                    hasMoved = 1;
-                }
-                hasTurned = 0;
-            }
-            break;
-        }
+    case 0:
+        pathFinder(Grid[CurrentPosRow][CurrentPosCol].NorthWall, Grid[CurrentPosRow][CurrentPosCol].EastWall);
+        break;
+    case 1:
+        pathFinder(Grid[CurrentPosRow][CurrentPosCol].EastWall, Grid[CurrentPosRow][CurrentPosCol].SouthWall);
+        break;
+    case 2:
+        pathFinder(Grid[CurrentPosRow][CurrentPosCol].SouthWall, Grid[CurrentPosRow][CurrentPosCol].WestWall);
+        break;
+    case 3:
+        pathFinder(Grid[CurrentPosRow][CurrentPosCol].WestWall, Grid[CurrentPosRow][CurrentPosCol].NorthWall);
+        break;
     }
+
+    // switch (RobotDirection)
+    // {
+    //     case 0:
+    //     {
+    //         if (Grid[CurrentPosRow][CurrentPosCol].NorthWall == 1)
+    //         {
+    //             if (hasTurned == 1)
+    //             {
+    //                 RobotDirection = 2; // South
+    //                 hasTurned = 0;
+    //             }
+    //             else
+    //             {
+    //                 RobotDirection = 1; // East
+    //                 hasTurned = 1;
+    //             }
+    //             hasMoved = 0;
+    //         }
+    //         else
+    //         {
+    //             if (Grid[CurrentPosRow][CurrentPosCol].EastWall == 0 && hasMoved == 1)
+    //             {
+    //                 RobotDirection = 1; // East
+    //                 hasMoved = 0;
+    //             }
+    //             else
+    //             {
+    //                 CurrentPosRow++;
+    //                 addToPath();
+    //                 hasMoved = 1;
+    //             }
+    //             hasTurned = 0;
+    //         }
+    //         break;
+    //     }
+    //     case 1:
+    //     {
+    //         if (Grid[CurrentPosRow][CurrentPosCol].EastWall == 1)
+    //         {
+    //             if (hasTurned == 1)
+    //             {
+    //                 RobotDirection = 3; // West
+    //                 hasTurned = 0;
+    //             }
+    //             else
+    //             {
+    //                 RobotDirection = 2; // South
+    //                 hasTurned = 1;
+    //             }
+    //             hasMoved = 0;
+    //         }
+    //         else
+    //         {
+    //             if (Grid[CurrentPosRow][CurrentPosCol].SouthWall == 0 && hasMoved == 1)
+    //             {
+    //                 RobotDirection = 2;
+    //                 hasMoved = 0;
+    //             }
+    //             else
+    //             {
+    //                 CurrentPosCol++;
+    //                 addToPath();
+    //                 hasMoved = 1;
+    //             }
+    //             hasTurned = 0;
+    //         }
+    //         break;
+    //     }
+    //     case 2:
+    //     {
+    //         if (Grid[CurrentPosRow][CurrentPosCol].SouthWall == 1)
+    //         {
+    //             if (hasTurned == 1)
+    //             {
+    //                 RobotDirection = 0; // North
+    //                 hasTurned = 0;
+    //             }
+    //             else
+    //             {
+    //                 RobotDirection = 3; // West
+    //                 hasTurned = 1;
+    //             }
+    //             hasMoved = 0;
+    //         }
+    //         else
+    //         {
+    //             if (Grid[CurrentPosRow][CurrentPosCol].WestWall == 0 && hasMoved == 1)
+    //             {
+    //                 RobotDirection = 3;
+    //                 hasMoved = 0;
+    //             }
+    //             else
+    //             {
+    //                 CurrentPosRow--;
+    //                 addToPath();
+    //                 hasMoved = 1;
+    //             }
+    //             hasTurned = 0;
+    //         }
+    //         break;
+    //     }
+    //     case 3:
+    //     {
+    //         if (Grid[CurrentPosRow][CurrentPosCol].WestWall == 1)
+    //         {
+    //             if (hasTurned == 1)
+    //             {
+    //                 RobotDirection = 1; // East
+    //                 hasTurned = 0;
+    //             }
+    //             else
+    //             {
+    //                 RobotDirection = 0; // North
+    //                 hasTurned = 1;
+    //             }
+    //             hasMoved = 0;
+    //         }
+    //         else
+    //         {
+    //             if (Grid[CurrentPosRow][CurrentPosCol].NorthWall == 0 && hasMoved == 1)
+    //             {
+    //                 RobotDirection = 0;
+    //                 hasMoved = 0;
+    //             }
+    //             else
+    //             {
+    //                 CurrentPosCol--;
+    //                 addToPath();
+    //                 hasMoved = 1;
+    //             }
+    //             hasTurned = 0;
+    //         }
+    //         break;
+    //     }
+    // }
 }
 
 void reverseStack()
@@ -526,8 +598,8 @@ void smoothDirections()
         }
     }
 
-    optimalPathStack = tempArr;
-    optimalPathStackIndex = index
+    optimalPathStack = tempArr; // TODO: may need pointer or use for loop and iterate through
+    optimalPathStackIndex = index;
 }
 
 void moveUsingStack()
@@ -535,23 +607,7 @@ void moveUsingStack()
     for (int i = optimalPathStackIndex; i >= 0; i--)
     {
         RobotDirection = optimalPathStack[i];
-
-        if (RobotDirection == 0)
-        {
-            CurrentPosRow++;
-        }
-        else if (RobotDirection == 1)
-        {
-            CurrentPosCol++;
-        }
-        else if (RobotDirection == 2)
-        {
-            CurrentPosRow--;
-        }
-        else if (RobotDirection == 3)
-        {
-            CurrentPosCol--;
-        }
+        mover();
 
         GridDraw();
         DisplayStartandEnd();
